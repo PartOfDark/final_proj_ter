@@ -47,7 +47,4 @@ jobs:
           IMAGE=cr.yandex/${{ secrets.YC_CLOUD_ID }}/${{ secrets.YC_REGISTRY_ID }}/my-app:${{ github.sha }}
           docker build -t $IMAGE -f app/Dockerfile.python app/
           echo "Image tagged as $IMAGE"
-
-      - name: Push Docker image
-        run: |
           docker push $IMAGE
