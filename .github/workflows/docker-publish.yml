@@ -40,8 +40,7 @@ jobs:
 
       - name: Configure Docker to use Yandex Container Registry
         run: |
-          yc container registry configure-docker \
-            --registry-id ${{ secrets.YC_REGISTRY_ID }}
+          yc container registry configure-docker
 
       - name: Build Docker image
         run: |
