@@ -16,7 +16,7 @@ jobs:
       - name: Restore SA key from Base64
         shell: bash
         run: |
-          printf '%s' "${{ secrets.YC_SA_KEY_JSON }}" | base64 -d > key.json
+          printf '%s' "${{ secrets.YC_SA_KEY_BS64 }}" | base64 -d > key.json
           echo "YC_SERVICE_ACCOUNT_KEY_FILE=$(pwd)/key.json" >> $GITHUB_ENV
 
       - name: Debug key.json
