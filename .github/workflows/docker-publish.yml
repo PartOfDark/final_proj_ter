@@ -16,7 +16,7 @@ jobs:
       - name: setup Yandex CLI
         run: |
           curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          echo 'export PATH=$HOME/.yandex-cloud/bin:$PATH' >> $GITHUB_ENV
+          echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' >> $GITHUB_ENV
 
       - name: Restore Service Account Key
         run: |
