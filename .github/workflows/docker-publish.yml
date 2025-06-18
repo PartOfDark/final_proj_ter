@@ -13,30 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: setup Yandex CLI
-        run: |
-          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          echo "PATH=$HOME/yandex-cloud/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Verify yc
-        run: |
-          which yc
-          yc --version
-
-      - name: Restore Service Account Key
-        shell: bash
-        run: |
-          cat <<'EOF' > key.json
-          ${{ secrets.YC_SA_KEY_JSON }}
-          EOF
-
       - name: Configure Yandex CLI
-        run: |
-          yc config set service-account-key key.json
-          yc config set cloud-id ${{ secrets.YC_CLOUD_ID }} 
-          yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
-          yc config set compute-default-zone ${{ secrets.YC_ZONE }}
-          yc config set registry-id ${{ secrets.YC_REGISTRY_ID }}
+        uses: yandex-cloud/setup-yc@v1
+        with:
+          version: latest
+          service-account-key: ${{ secrets.YC_SA_KEY_JSON }}
+          cloud-id: ${{ secrets.YC_CLOUD_ID }}
+          folder-id: ${{ secrets.YC_FOLDER_ID }}
+          compute-default-zone: ${{ secrets.YC_ZONE }}
+          registry-id: ${{ secrets.YC_REGISTRY_ID }}
 
       - name: Log in to Container Registry
         run: yc container registry login
