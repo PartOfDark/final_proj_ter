@@ -13,10 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: setup Yandex CLI
+      - name: Restore SA key from Base64
         shell: bash
         run: |
-          echo "${{ secrets.YC_SA_KEY_JSON }}" > key.json
+          echo "${{ secrets.YC_SA_KEY_B64 }}" | base64 -d > key.json
           echo "YC_SERVICE_ACCOUNT_KEY_FILE=$(pwd)/key.json" >> $GITHUB_ENV
 
       - name: Verify yc
