@@ -1,0 +1,127 @@
+variable "zone" {
+  type    = string
+  default = "ru-central1-b"
+}
+variable "subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.1.0/24"]
+}
+
+variable "vpc_name" {
+  type    = string
+  default = "develop"
+}
+
+variable "subnet_name" {
+  type    = string
+  default = "subnet_develop"
+}
+# variable "token" {
+#   type        = string
+#   description = "OAuth-token; https://cloud.yandex.ru/docs/iam/concepts/authorization/oauth-token"
+# }
+
+variable "cloud_id" {
+  type        = string
+  description = "https://cloud.yandex.ru/docs/resource-manager/operations/cloud/get-id"
+}
+
+variable "folder_id" {
+  type        = string
+  description = "https://cloud.yandex.ru/docs/resource-manager/operations/folder/get-id"
+}
+
+variable "vm_name" {
+  type    = string
+  default = "web"
+}
+
+variable "ssh_path" {
+  type        = string
+  description = "Path to SSH public key file"
+  default     = "~/.ssh/id_ed25519.pub"
+}
+
+variable "platform_id" {
+  type    = string
+  default = "standard-v3"
+}
+
+variable "cores" {
+  type    = number
+  default = 2
+}
+
+variable "memory" {
+  type    = number
+  default = 2
+}
+
+variable "core_fraction" {
+  type    = number
+  default = 20
+}
+
+variable "disk_type" {
+  type    = string
+  default = "network-hdd"
+
+}
+
+variable "disk_size" {
+  type    = number
+  default = 20
+}
+
+variable "image_family" {
+  type    = string
+  default = "ubuntu-2204-lts"
+}
+
+variable "mdb_props" {
+  type = object({
+    name        = string
+    environment = string
+    version     = string
+    user = object({
+      name     = string
+      password = string
+    })
+    resources = object({
+      resource_preset_id = string
+      disk_size          = number
+      disk_type_id       = string
+    })
+  })
+  default = {
+    name        = "app-db"
+    environment = "PRESTABLE"
+    version     = "8.0"
+    user = {
+      name     = "appuser"
+      password = "password" #BE CAREFUL! This is a default password, change it in production!
+      #IF YOU DONT CHANGE IT, YOUR ASS WILL BE KICKED!
+    }
+    resources = {
+      resource_preset_id = "s2.micro"
+      disk_size          = 20
+      disk_type_id       = "network-hdd"
+    }
+  }
+
+}
+
+variable "registry" {
+  type = object({
+    name      = string
+    folder_id = string
+    labels    = map(string)
+  })
+  default = {
+    name      = "default-registry"
+    folder_id = "default_folder_id"
+    labels = {
+      my-label = "default"
+    }
+  }
+}
