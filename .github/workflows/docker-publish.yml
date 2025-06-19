@@ -33,7 +33,7 @@ jobs:
         terraform_version: "1.8.4"
 
     - name: Terraform Init
-      run: terraform -chdir=infra init
+      run: terraform -chdir=infra init -input=false
 
     - name: Terraform Plan
       run: |
@@ -44,7 +44,7 @@ jobs:
              -var="zone=${{ secrets.YC_ZONE }}"
     - name: Terraform Apply
       run: |
-        terraform -chdir=infra apply -auto-approve \
+        terraform -chdir=infra apply -auto-approve -input=false \
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
