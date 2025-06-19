@@ -47,14 +47,28 @@ resource "yandex_compute_instance" "web" {
     ]
   }
   metadata = {
+    repo_url           = var.repo_url
+    repo_branch        = var.repo_branch
+    repo_path          = var.repo_path
+    db_secret_ids      = join(",", var.db_secret_ids)
+    cloud_id           = var.cloud_id
+    folder_id          = var.folder_id
+    zone               = var.zone
     ssh-keys           = "ubuntu:${file(var.ssh_path)}"
     user-data          = data.template_file.cloudinit.rendered
     serial-port-enable = 1
+
+    service_account = {
+      key = {
+        json = base64decode(var.sa_key_b64)
+      }
+    }
   }
   labels = {
     environment = "develop"
   }
 }
+
 
 resource "yandex_mdb_mysql_cluster" "db" {
   name        = var.mdb_props.name

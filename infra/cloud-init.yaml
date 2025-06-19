@@ -10,7 +10,41 @@ package_update: true
 packages:
   - docker.io
   - docker-compose-plugin
+  - git
 
 runcmd:
   - systemctl enable docker
   - systemctl start docker
+
+  - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+  - export PATH=$HOME/yandex-cloud/bin:$PATH
+
+  - |
+    DB_SECRETS=(${db_secret_ids})
+    REPO_URL="${repo_url}"
+    BRANCH="${repo_branch}"
+    APP_PATH="${repo_path}"
+
+  - yc config set service-account-key /etc/cloud/key.json
+  - yc config set cloud-id ${cloud_id}
+  - yc config set folder-id ${folder_id}
+  - yc config set compute-default-zone ${zone}
+
+  - |
+    for secret_id in "${DB_SECRETS[@]}"; do
+      name=$(yc lockbox secret get "$secret_id" --format json | jq -r .name)
+      value=$(yc lockbox secret version access latest \
+        --secret-id "$secret_id" \
+        --format json \
+        | jq -r .data.value)
+      echo "export $name='$value'" >> /etc/profile.d/app_env.sh
+    done
+  - chmod +x /etc/profile.d/app_env.sh
+  - source /etc/profile.d/app_env.sh
+
+  - git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" /opt/app
+  - cd /opt/app/"${APP_PATH}"
+  - docker-compose pull
+  - docker-compose up -d
+
+final_message: "is that really working? The app is up and running!"

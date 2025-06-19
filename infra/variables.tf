@@ -125,3 +125,31 @@ variable "registry" {
     }
   }
 }
+
+variable "sa_key_b64" {
+  type      = string
+  sensitive = true
+}
+
+variable "repo_url" {
+  type = string
+}
+
+variable "repo_branch" {
+  type    = string
+  default = "master"
+}
+
+variable "repo_path" {
+  type    = string
+  default = "app"
+}
+
+variable "db_secret_ids" {
+  type = list(string)
+}
+
+variable "registry_id" {
+  type = string
+}
+

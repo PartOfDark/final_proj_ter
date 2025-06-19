@@ -6,6 +6,36 @@ on:
       - master
 
 jobs:
+  tf:
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: true     
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: "1.5.0"
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Plan
+      run: terraform plan \
+             -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
+             -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
+             -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
+             -var="zone=${{ secrets.YC_ZONE }}"
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve \
+             -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
+             -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
+             -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
+             -var="zone=${{ secrets.YC_ZONE }}"
+
   build-and-push:
     runs-on: ubuntu-latest
 
@@ -37,16 +67,6 @@ jobs:
           yc config set cloud-id ${{ secrets.YC_CLOUD_ID }}
           yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
           yc config set compute-default-zone ${{ secrets.YC_ZONE }}
-          yc container registry list \
-
-      - name: List registries (debug)
-        shell: bash
-        run: |
-          echo "Folder ID = ${{ secrets.YC_FOLDER_ID }}"
-          yc container registry list \
-            --folder-id "${{ secrets.YC_FOLDER_ID }}" \
-            --format json \
-          | jq -r '.[] | "\(.id) — \(.name)"'
 
       - name: Configure Docker to use Yandex Container Registry
         run: |
@@ -58,5 +78,3 @@ jobs:
           docker build -t "$IMAGE" -f app/Dockerfile.python app/
           echo "Image tagged as $IMAGE"
           docker push "$IMAGE"
-
-#todo: check local avelability of the registry
