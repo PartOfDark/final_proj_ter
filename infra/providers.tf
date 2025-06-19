@@ -9,7 +9,7 @@ terraform {
     region  = "ru-central1"
 
     bucket = "my-demo-bucket" #FIO-netology-tfstate
-    key    = "production/terraform.tfstate"
+    key    = "dev/terraform.tfstate"
 
 
     # access_key                  = "..."          #Только для примера! Не хардкодим секретные данные!
@@ -22,7 +22,7 @@ terraform {
     skip_s3_checksum            = true # Необходимая опция при описании бэкенда для Terraform версии 1.6.3 и старше.
 
     endpoints = {
-      dynamodb = "grpcs://ydb.serverless.yandexcloud.net:2135/?database=/ru-central1/b1g4rrcf3jq0fkd1d7h1/etnkm3n4su23p34nkrpb"
+      dynamodb = "https://docapi.serverless.yandexcloud.net/ru-central1/b1g4rrcf3jq0fkd1d7h1/etnkm3n4su23p34nkrpb"
       s3       = "https://storage.yandexcloud.net"
     }
 
