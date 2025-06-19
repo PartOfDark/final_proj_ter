@@ -54,12 +54,12 @@ resource "yandex_compute_instance" "web" {
     folder_id   = var.folder_id
     zone        = var.zone
 
-    DB_HOST          = data.yandex_lockbox_secret_version.db_host.payload["value"]
-    DB_USER          = data.yandex_lockbox_secret_version.db_user.payload["value"]
-    DB_PASSWORD      = data.yandex_lockbox_secret_version.db_password.payload["value"]
-    DB_DATABASE      = data.yandex_lockbox_secret_version.db_database.payload["value"]
-    DB_TABLE         = data.yandex_lockbox_secret_version.db_table.payload["value"]
-    DB_ROOT_PASSWORD = data.yandex_lockbox_secret_version.db_root_password.payload["value"]
+    DB_HOST          = data.yandex_lockbox_secret_version.db_host.entries[0].text_value
+    DB_USER          = data.yandex_lockbox_secret_version.db_user.entries[0].text_value
+    DB_PASSWORD      = data.yandex_lockbox_secret_version.db_password.entries[0].text_value
+    DB_DATABASE      = data.yandex_lockbox_secret_version.db_database.entries[0].text_value
+    DB_TABLE         = data.yandex_lockbox_secret_version.db_table.entries[0].text_value
+    DB_ROOT_PASSWORD = data.yandex_lockbox_secret_version.db_root_password.entries[0].text_value
 
     ssh-keys           = "ubuntu:${file(var.ssh_path)}"
     user-data          = data.template_file.cloudinit.rendered
