@@ -132,7 +132,8 @@ variable "sa_key_b64" {
 }
 
 variable "repo_url" {
-  type = string
+  type    = string
+  default = "https://github.com/PartOfDark/final_proj_ter.git"
 }
 
 variable "repo_branch" {
