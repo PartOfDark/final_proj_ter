@@ -33,6 +33,7 @@ runcmd:
     yc config set compute-default-zone "${zone}"
 
   - |
+    > /etc/profile.d/app_env.sh
     for secret_id in "${DB_SECRETS[@]}"; do
       name=$(yc lockbox secret get "$secret_id" --format json | jq -r '.name')
       value=$(yc lockbox secret version access latest \
