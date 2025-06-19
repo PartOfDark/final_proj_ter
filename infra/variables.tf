@@ -157,7 +157,7 @@ variable "db_secret_ids" {
   ]
 }
 
-variable "registry_id" {
-  type = string
-}
+# variable "registry_id" {
+#   type = string
+# }
 
