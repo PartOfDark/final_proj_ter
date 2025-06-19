@@ -39,7 +39,7 @@ variable "vm_name" {
 variable "ssh_path" {
   type        = string
   description = "Path to SSH public key file"
-  default     = "~/.ssh/id_ed25519.pub"
+  #default     = "~/.ssh/id_ed25519.pub"
 }
 
 variable "platform_id" {
