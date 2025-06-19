@@ -27,6 +27,9 @@ jobs:
         region = ru-central1
         EOF
 
+    - name: Set SSH public key
+      run: echo "${{ secrets.SSH_PUB_KEY }}" > infra/ssh_pub.key
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
