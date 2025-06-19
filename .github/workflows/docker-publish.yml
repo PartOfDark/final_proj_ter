@@ -24,14 +24,14 @@ jobs:
 
     - name: Terraform Plan
       run: |
-        terraform plan \
+        terraform plan -chdir=infra \
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
              -var="zone=${{ secrets.YC_ZONE }}"
     - name: Terraform Apply
       run: |
-        terraform apply -auto-approve \
+        terraform apply -auto-approve -chdir=infra \
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
