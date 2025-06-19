@@ -23,20 +23,22 @@ jobs:
       run: terraform init
 
     - name: Terraform Plan
-      run: terraform plan \
+      run: |
+        terraform plan \
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
              -var="zone=${{ secrets.YC_ZONE }}"
-
     - name: Terraform Apply
-      run: terraform apply -auto-approve \
+      run: |
+        terraform apply -auto-approve \
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
              -var="zone=${{ secrets.YC_ZONE }}"
 
   build-and-push:
+    needs: tf
     runs-on: ubuntu-latest
 
     steps:
