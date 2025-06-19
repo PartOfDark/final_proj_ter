@@ -5,7 +5,14 @@ data "yandex_compute_image" "ubuntu" {
 data "template_file" "cloudinit" {
   template = file("${path.module}/cloud-init.yaml")
   vars = {
-    ssh_key = file(var.ssh_path)
+    ssh_key       = file(var.ssh_path)
+    db_secret_ids = join(",", var.db_secret_ids)
+    repo_url      = var.repo_url
+    repo_branch   = var.repo_branch
+    repo_path     = var.repo_path
+    cloud_id      = var.cloud_id
+    folder_id     = var.folder_id
+    zone          = var.zone
   }
 }
 
