@@ -47,16 +47,24 @@ resource "yandex_compute_instance" "web" {
     ]
   }
   metadata = {
-    repo_url           = var.repo_url
-    repo_branch        = var.repo_branch
-    repo_path          = var.repo_path
-    db_secret_ids      = join(",", var.db_secret_ids)
-    cloud_id           = var.cloud_id
-    folder_id          = var.folder_id
-    zone               = var.zone
+    repo_url    = var.repo_url
+    repo_branch = var.repo_branch
+    repo_path   = var.repo_path
+    cloud_id    = var.cloud_id
+    folder_id   = var.folder_id
+    zone        = var.zone
+
+    DB_HOST          = data.yandex_lockbox_secret_version.db_host.payload["value"]
+    DB_USER          = data.yandex_lockbox_secret_version.db_user.payload["value"]
+    DB_PASSWORD      = data.yandex_lockbox_secret_version.db_password.payload["value"]
+    DB_DATABASE      = data.yandex_lockbox_secret_version.db_database.payload["value"]
+    DB_TABLE         = data.yandex_lockbox_secret_version.db_table.payload["value"]
+    DB_ROOT_PASSWORD = data.yandex_lockbox_secret_version.db_root_password.payload["value"]
+
     ssh-keys           = "ubuntu:${file(var.ssh_path)}"
     user-data          = data.template_file.cloudinit.rendered
     serial-port-enable = 1
+
 
     service_account = {
       key = {
