@@ -14,11 +14,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-
     - name: Restore SA key from Base64 into infra/
       run: |
-        mkdir -p infra
-        printf '%s' "${{ secrets.YC_SA_KEY_BS64 }}" | base64 -d > infra/key.json
+        printf '%s' "${{ secrets.YC_SA_KEY_BS64 }}" | base64 -d > ~/.key.json
 
     - name: Configure S3-backend credentials
       run: |
