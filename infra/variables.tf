@@ -147,6 +147,14 @@ variable "repo_path" {
 
 variable "db_secret_ids" {
   type = list(string)
+  default = [
+    "e6qhm6fsibgkkgssrrn1", # DB_HOST
+    "e6qgr673j31g3jf27vca", # DB_USER
+    "e6qd7st67mr2fib931a5", # DB_PASSWORD
+    "e6qhiliqs9splsc65svm", # DB_DATABASE
+    "e6qf2kffoahh7e8hrqln", # DB_TABLE
+    "e6qk5ck8bm5209kdq931"  # DB_ROOT_PASSWORD
+  ]
 }
 
 variable "registry_id" {
