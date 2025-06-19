@@ -17,8 +17,10 @@ runcmd:
   - systemctl start docker
 
   - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-  - export PATH=$HOME/yandex-cloud/bin:$PATH
-
+  - echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh
+  - chmod +x /etc/profile.d/yc_path.sh
+  - source /etc/profile.d/yc_path.sh
+    read -a DB_SECRETS <<< "${db_secret_ids}"
   - |
     DB_SECRETS=(${db_secret_ids})
     REPO_URL="${repo_url}"
@@ -44,7 +46,7 @@ runcmd:
 
   - git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" /opt/app
   - cd /opt/app/"${APP_PATH}"
-  - docker-compose pull
-  - docker-compose up -d
+  - docker compose pull
+  - docker compose up -d
 
 final_message: "is that really working? The app is up and running!"
