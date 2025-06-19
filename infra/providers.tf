@@ -26,7 +26,7 @@ terraform {
       s3       = "https://storage.yandexcloud.net"
     }
 
-    dynamodb_table = "table771"
+    dynamodb_table = "dev/table771"
   }
   required_providers {
     yandex = {
