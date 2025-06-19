@@ -42,6 +42,7 @@ jobs:
       run: |
         terraform -chdir=infra plan  \
              -lock=false \
+             -var="ssh_path=ssh_pub.key" \
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
@@ -49,7 +50,8 @@ jobs:
     - name: Terraform Apply
       run: |
         terraform -chdir=infra apply -auto-approve -input=false \
-             -lock=false \ 
+             -lock=false \
+             -var="ssh_path=ssh_pub.key" \ 
              -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
              -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
              -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
