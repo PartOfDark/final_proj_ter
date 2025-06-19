@@ -64,13 +64,6 @@ resource "yandex_compute_instance" "web" {
     ssh-keys           = "ubuntu:${file(var.ssh_path)}"
     user-data          = data.template_file.cloudinit.rendered
     serial-port-enable = 1
-
-
-    service_account = {
-      key = {
-        json = base64decode(var.sa_key_b64)
-      }
-    }
   }
   labels = {
     environment = "develop"
