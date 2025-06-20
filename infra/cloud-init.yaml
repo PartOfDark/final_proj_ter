@@ -29,4 +29,22 @@ runcmd:
   - yc config set folder-id "${folder_id}"
   - yc config set compute-default-zone "${zone}"
 
+  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app
+  - cd /opt/app/"${repo_path}"
+
+  - |
+    IFS=',' read -r -a DB_SECRETS <<< "${db_secret_ids}"
+    mkdir -p /etc/profile.d
+    > /etc/profile.d/app_env.sh
+    for secret_id in "${DB_SECRETS[@]}"; do
+      name=$(yc lockbox secret get "$secret_id" --format json | jq -r '.name')
+      value=$(yc lockbox secret version access latest \
+        --secret-id "$secret_id" \
+        --format json | jq -r '.entries[0].text_value')
+      echo "export ${name}='${value}'" >> /etc/profile.d/app_env.sh
+    done
+    chmod +x /etc/profile.d/app_env.sh
+    # грузим переменные
+    source /etc/profile.d/app_env.sh
+
 final_message: "App is up and running!"
