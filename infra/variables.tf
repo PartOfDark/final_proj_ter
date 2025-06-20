@@ -42,6 +42,11 @@ variable "ssh_path" {
   #default     = "~/.ssh/id_ed25519.pub"
 }
 
+variable "ssh_pub_key" {
+  type        = string
+  description = "Публичный SSH-ключ, передаваемый из GitHub Secrets"
+}
+
 variable "platform_id" {
   type    = string
   default = "standard-v3"
