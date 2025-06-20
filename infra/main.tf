@@ -54,11 +54,13 @@ resource "yandex_compute_instance" "web" {
     ]
   }
   metadata = {
+    ssh-keys = "ubuntu:${var.ssh_pub_key}"
+
     user-data = templatefile(
       "${path.module}/cloud-init.yaml.tpl",
       {
         ssh_key       = var.ssh_pub_key
-        db_secret_ids = var.db_secret_ids
+        db_secret_ids = join(",", var.db_secret_ids)
         repo_url      = var.repo_url
         repo_branch   = var.repo_branch
         repo_path     = var.repo_path
@@ -67,8 +69,8 @@ resource "yandex_compute_instance" "web" {
         zone          = var.zone
       }
     )
+
     serial-port-enable = 1
-    ssh-keys           = "ubuntu:${file(var.ssh_path)}"
   }
   labels = {
     environment = "develop"
