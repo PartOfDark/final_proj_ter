@@ -2,11 +2,11 @@ data "yandex_compute_image" "ubuntu" {
   family = var.image_family
 }
 
-data "template_file" "cloudinit" {
-  template = file("${path.module}/cloud-init.yaml")
+data "templatefile" "cloudinit" {
+  template = file("${path.module}/cloud-init.yaml.tpl")
   vars = {
-    ssh_key       = file(var.ssh_path)
-    db_secret_ids = join(",", var.db_secret_ids)
+    ssh_key       = var.ssh_pub_key
+    db_secret_ids = var.db_secret_ids
     repo_url      = var.repo_url
     repo_branch   = var.repo_branch
     repo_path     = var.repo_path
@@ -69,7 +69,7 @@ resource "yandex_compute_instance" "web" {
     # db_root_password = data.yandex_lockbox_secret_version.db_root_password.entries[0].text_value
 
     ssh-keys           = "ubuntu:${file(var.ssh_path)}"
-    user-data          = data.template_file.cloudinit.rendered
+    user-data          = data.templatefile.cloudinit.rendered
     serial-port-enable = 1
   }
   labels = {
