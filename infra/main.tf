@@ -5,7 +5,8 @@ data "yandex_compute_image" "ubuntu" {
 data "template_file" "cloudinit" {
   template = file("${path.module}/cloud-init.yaml")
   vars = {
-    ssh_key       = file(var.ssh_path)
+    #ssh_key       = file(var.ssh_path)
+    ssh_key       = var.ssh_pub_key
     db_secret_ids = join(",", var.db_secret_ids)
     repo_url      = var.repo_url
     repo_branch   = var.repo_branch
