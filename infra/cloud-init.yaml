@@ -32,20 +32,20 @@ runcmd:
     yc config set folder-id "${folder_id}"
     yc config set compute-default-zone "${zone}"
 
-  - |
-    > /etc/profile.d/app_env.sh
-    for secret_id in "${DB_SECRETS[@]}"; do
-      name=$(yc lockbox secret get "$secret_id" --format json | jq -r '.name')
-      value=$(yc lockbox secret version access latest \
-        --secret-id "$secret_id" \
-        --format json | jq -r '.entries[0].text_value')
-      echo "export ${name}='${value}'" >> /etc/profile.d/app_env.sh
-    done
-    chmod +x /etc/profile.d/app_env.sh
-    source /etc/profile.d/app_env.sh
+  # - |
+  #   > /etc/profile.d/app_env.sh
+  #   for secret_id in "${DB_SECRETS[@]}"; do
+  #     name=$(yc lockbox secret get "$secret_id" --format json | jq -r '.name')
+  #     value=$(yc lockbox secret version access latest \
+  #       --secret-id "$secret_id" \
+  #       --format json | jq -r '.entries[0].text_value')
+  #     echo "export ${name}='${value}'" >> /etc/profile.d/app_env.sh
+  #   done
+  #   chmod +x /etc/profile.d/app_env.sh
+  #   source /etc/profile.d/app_env.sh
 
-  - cd "/opt/app/${repo_path}"
-  - docker compose pull
-  - docker compose up -d
+  # - cd "/opt/app/${repo_path}"
+  # - docker compose pull
+  # - docker compose up -d
 
 final_message: "Is that really working? The app is up and running!"
