@@ -96,9 +96,14 @@ jobs:
         run: |
           yc container registry configure-docker
 
-      - name: Build Docker image
-        run: |
-          IMAGE=cr.yandex/${{ secrets.YC_REGISTRY_ID }}/my-app:${{ github.sha }}
-          docker build -t "$IMAGE" -f app/Dockerfile.python app/
-          echo "Image tagged as $IMAGE"
-          docker push "$IMAGE"
+      - name: Build and push Docker image with cache
+        uses: docker/build-push-action@v3
+        with:
+          context: app                    
+          file: app/Dockerfile.python     
+          push: true                      
+          tags: |
+            cr.yandex/${{ secrets.YC_REGISTRY_ID }}/my-app:cache
+            cr.yandex/${{ secrets.YC_REGISTRY_ID }}/my-app:${{ github.sha }}
+          cache-from: type=registry,ref=cr.yandex/${{ secrets.YC_REGISTRY_ID }}/my-app:cache
+          cache-to:   type=registry,ref=cr.yandex/${{ secrets.YC_REGISTRY_ID }}/my-app:cache,mode=max
