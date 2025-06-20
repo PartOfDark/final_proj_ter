@@ -28,7 +28,5 @@ runcmd:
   - yc config set cloud-id "${cloud_id}"
   - yc config set folder-id "${folder_id}"
   - yc config set compute-default-zone "${zone}"
-  - docker compose pull
-  - docker compose up -d
 
 final_message: "App is up and running!"
