@@ -2,7 +2,7 @@ data "yandex_compute_image" "ubuntu" {
   family = var.image_family
 }
 
-data "template_file" "cloudinit" {
+data "templatefile" "cloudinit" {
   template = file("${path.module}/cloud-init.yaml")
   vars = {
     #ssh_key       = file(var.ssh_path)
@@ -70,7 +70,7 @@ resource "yandex_compute_instance" "web" {
     DB_ROOT_PASSWORD = data.yandex_lockbox_secret_version.db_root_password.entries[0].text_value
 
     ssh-keys           = "ubuntu:${file(var.ssh_path)}"
-    user-data          = data.template_file.cloudinit.rendered
+    user-data          = data.templatefile.cloudinit.rendered
     serial-port-enable = 1
   }
   labels = {
