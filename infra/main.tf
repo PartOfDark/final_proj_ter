@@ -57,7 +57,7 @@ resource "yandex_compute_instance" "web" {
     ssh-keys = "ubuntu:${var.ssh_pub_key}"
 
     user-data = templatefile(
-      "${path.module}/cloud-init.yaml.tpl",
+      "${path.module}/cloud-init.tftpl",
       {
         ssh_key       = var.ssh_pub_key
         db_secret_ids = join(",", var.db_secret_ids)
