@@ -2,19 +2,19 @@ data "yandex_compute_image" "ubuntu" {
   family = var.image_family
 }
 
-data "templatefile" "cloudinit" {
-  template = file("${path.module}/cloud-init.yaml.tpl")
-  vars = {
-    ssh_key       = var.ssh_pub_key
-    db_secret_ids = var.db_secret_ids
-    repo_url      = var.repo_url
-    repo_branch   = var.repo_branch
-    repo_path     = var.repo_path
-    cloud_id      = var.cloud_id
-    folder_id     = var.folder_id
-    zone          = var.zone
-  }
-}
+# data "templatefile" "cloudinit" {
+#   template = file("${path.module}/cloud-init.yaml.tpl")
+#   vars = {
+#     ssh_key       = var.ssh_pub_key
+#     db_secret_ids = var.db_secret_ids
+#     repo_url      = var.repo_url
+#     repo_branch   = var.repo_branch
+#     repo_path     = var.repo_path
+#     cloud_id      = var.cloud_id
+#     folder_id     = var.folder_id
+#     zone          = var.zone
+#   }
+# }
 
 resource "yandex_vpc_network" "develop" {
   name = var.vpc_name
