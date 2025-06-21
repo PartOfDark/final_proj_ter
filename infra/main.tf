@@ -63,6 +63,7 @@ resource "yandex_compute_instance" "web" {
       cloud_id    = var.cloud_id
       folder_id   = var.folder_id
       zone        = var.zone
+      sa_key_b64  = var.sa_key_b64
 
       db_host_secret_id          = var.db_host_secret_id
       db_user_secret_id          = var.db_user_secret_id
