@@ -1,4 +1,10 @@
 #cloud-config
+write_files:
+  - path: /etc/cloud/key.json
+    owner: root:root
+    permissions: "0644"
+    content: |
+      ${sa_key_b64}
 
 users:
   - name: ubuntu
@@ -48,22 +54,40 @@ runcmd:
   - su - ubuntu -c git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app/"${repo_path}" || echo "❌ git clone failed" >&2
   - su - ubuntu cd /opt/app/"${repo_path}"
 
-  # 4) Достаём секреты и пишем их в /etc/profile.d/app_env.sh
   - mkdir -p /etc/profile.d
-  - 'su - ubuntu -c "export DB_HOST=$(yc lockbox secret version access latest --secret-id ${db_host_secret_id} --format json | jq -r .entries[0].text_value) && echo export DB_HOST=\"$DB_HOST\" >> /etc/profile.d/app_env.sh"'
+  - "> /etc/profile.d/app_env.sh"
 
-  - 'su - ubuntu -c "export DB_USER=$(yc lockbox secret version access latest --secret-id ${db_user_secret_id} --format json | jq -r .entries[0].text_value) && echo export DB_USER=\"$DB_USER\" >> /etc/profile.d/app_env.sh"'
+  - |
+    echo "export DB_HOST=$(yc lockbox payload get ${db_host_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
+      | tee -a /etc/profile.d/app_env.sh
 
-  - 'su - ubuntu -c "export DB_PASSWORD=$(yc lockbox secret version access latest --secret-id ${db_password_secret_id} --format json | jq -r .entries[0].text_value) && echo export DB_PASSWORD=\"$DB_PASSWORD\" >> /etc/profile.d/app_env.sh"'
+  - |
+    echo "export DB_USER=$(yc lockbox payload get ${db_user_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
+      | tee -a /etc/profile.d/app_env.sh
 
-  - 'su - ubuntu -c "export DB_DATABASE=$(yc lockbox secret version access latest --secret-id ${db_database_secret_id} --format json | jq -r .entries[0].text_value) && echo export DB_DATABASE=\"$DB_DATABASE\" >> /etc/profile.d/app_env.sh"'
+  - |
+    echo "export DB_PASSWORD=$(yc lockbox payload get ${db_password_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
+      | tee -a /etc/profile.d/app_env.sh
 
-  - 'su - ubuntu -c "export DB_TABLE=$(yc lockbox secret version access latest --secret-id ${db_table_secret_id} --format json | jq -r .entries[0].text_value) && echo export DB_TABLE=\"$DB_TABLE\" >> /etc/profile.d/app_env.sh"'
+  - |
+    echo "export DB_DATABASE=$(yc lockbox payload get ${db_database_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
+      | tee -a /etc/profile.d/app_env.sh
 
-  - 'su - ubuntu -c "export DB_ROOT_PASSWORD=$(yc lockbox secret version access latest --secret-id ${db_root_password_secret_id} --format json | jq -r .entries[0].text_value) && echo export DB_ROOT_PASSWORD=\"$DB_ROOT_PASSWORD\" >> /etc/profile.d/app_env.sh"'
+  - |
+    echo "export DB_TABLE=$(yc lockbox payload get ${db_table_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
+      | tee -a /etc/profile.d/app_env.sh
+
+  - |
+    echo "export DB_ROOT_PASSWORD=$(yc lockbox payload get ${db_root_password_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
+      | tee -a /etc/profile.d/app_env.sh
 
   - chmod +x /etc/profile.d/app_env.sh
-  - source /etc/profile.d/app_env.sh
 
   # 5) Запускаем docker-compose
   - 'su - ubuntu -c "cd /opt/app/${repo_path} && docker compose pull && docker compose up -d"'
