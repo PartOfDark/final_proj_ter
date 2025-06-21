@@ -56,14 +56,20 @@ resource "yandex_compute_instance" "web" {
   metadata = {
     ssh-keys = "ubuntu:${var.ssh_pub_key}"
     user-data = templatefile("${path.module}/cloud-init.tftpl", {
-      ssh_key           = var.ssh_pub_key
-      repo_url          = var.repo_url
-      repo_branch       = var.repo_branch
-      repo_path         = var.repo_path
-      cloud_id          = var.cloud_id
-      folder_id         = var.folder_id
-      zone              = var.zone
-      db_secret_ids_map = var.db_secret_ids
+      ssh_key     = var.ssh_pub_key
+      repo_url    = var.repo_url
+      repo_branch = var.repo_branch
+      repo_path   = var.repo_path
+      cloud_id    = var.cloud_id
+      folder_id   = var.folder_id
+      zone        = var.zone
+
+      db_host_secret_id          = var.db_host_secret_id
+      db_user_secret_id          = var.db_user_secret_id
+      db_password_secret_id      = var.db_password_secret_id
+      db_database_secret_id      = var.db_database_secret_id
+      db_table_secret_id         = var.db_table_secret_id
+      db_root_password_secret_id = var.db_root_password_secret_id
     })
     serial-port-enable = 1
   }

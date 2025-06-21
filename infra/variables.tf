@@ -151,20 +151,55 @@ variable "repo_path" {
   default = "app"
 }
 
-variable "db_secret_ids" {
-  description = "LockBox IDs для каждого секрета (ключи должны совпадать с тем, как вы их используете в cloud-init)"
-  type        = map(string)
-  default = {
-    DB_HOST          = "e6qhm6fsibgkkgssrrn1"
-    DB_USER          = "e6qer673j31g3jf27vca"
-    DB_PASSWORD      = "e6qd7st67mr2fib931a5"
-    DB_DATABASE      = "e6qbdnboe8sv9o230vmi"
-    DB_TABLE         = "e6qcukmn90jp6ipqasfd"
-    DB_ROOT_PASSWORD = "e6qk5ck8bm5209kdq931"
-  }
-}
+# variable "db_secret_ids" {
+#   description = "LockBox IDs для каждого секрета (ключи должны совпадать с тем, как вы их используете в cloud-init)"
+#   type        = map(string)
+#   default = {
+#     DB_HOST          = "e6qhm6fsibgkkgssrrn1"
+#     DB_USER          = "e6qer673j31g3jf27vca"
+#     DB_PASSWORD      = "e6qd7st67mr2fib931a5"
+#     DB_DATABASE      = "e6qbdnboe8sv9o230vmi"
+#     DB_TABLE         = "e6qcukmn90jp6ipqasfd"
+#     DB_ROOT_PASSWORD = "e6qk5ck8bm5209kdq931"
+#   }
+# }
 
 # variable "registry_id" {
 #   type = string
 # }
 
+variable "db_host_secret_id" {
+  description = "Lockbox Secret ID для DB_HOST"
+  type        = string
+  default     = "e6qhm6fsibgkkgssrrn1"
+}
+
+variable "db_user_secret_id" {
+  description = "Lockbox Secret ID для DB_USER"
+  type        = string
+  default     = "e6qer673j31g3jf27vca"
+}
+
+variable "db_password_secret_id" {
+  description = "Lockbox Secret ID для DB_PASSWORD"
+  type        = string
+  default     = "e6qd7st67mr2fib931a5"
+}
+
+variable "db_database_secret_id" {
+  description = "Lockbox Secret ID для DB_DATABASE"
+  type        = string
+  default     = "e6qbdnboe8sv9o230vmi"
+}
+
+variable "db_table_secret_id" {
+  description = "Lockbox Secret ID для DB_TABLE"
+  type        = string
+  default     = "e6qcukmn90jp6ipqasfd"
+}
+
+variable "db_root_password_secret_id" {
+  description = "Lockbox Secret ID для DB_ROOT_PASSWORD"
+  type        = string
+  default     = "e6qk5ck8bm5209kdq931"
+}

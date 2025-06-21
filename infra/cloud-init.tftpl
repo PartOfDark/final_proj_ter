@@ -16,15 +16,15 @@ packages:
   - jq
 
 runcmd:
-  # 1) Включаем Docker
+  # 1) Docker
   - systemctl enable docker && systemctl start docker
 
-  # 2) Устанавливаем yc CLI
+  # 2) yc CLI
   - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash \
     && echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh \
     && chmod +x /etc/profile.d/yc_path.sh
 
-  # 3) Клонируем репо и настраиваем yc
+  # 3) Клоним репо и настраиваем yc
   - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app \
     && cd /opt/app/"${repo_path}"
   - yc config set service-account-key /etc/cloud/key.json
@@ -32,21 +32,45 @@ runcmd:
   - yc config set folder-id "${folder_id}"
   - yc config set compute-default-zone "${zone}"
 
-  # 4) Парсим ID секретов и вытягиваем их из Lockbox
+  # 4) Достаём секреты по одному
   - |
     mkdir -p /etc/profile.d
     > /etc/profile.d/app_env.sh
-    for key in ${keys(db_secret_ids_map)}; do
-       id=${db_secret_ids_map[key]}
-       name=$key
-       value=$(yc lockbox secret version access latest \
-         --secret-id "$id" --format json | jq -r .entries[0].text_value)
-       echo "export $name='$value'" >> /etc/profile.d/app_env.sh
-    done
+
+    export DB_HOST=$(yc lockbox secret version access latest \
+      --secret-id "${db_host_secret_id}" \
+      --format json | jq -r .entries[0].text_value)
+    echo "export DB_HOST='$DB_HOST'" >> /etc/profile.d/app_env.sh
+
+    export DB_USER=$(yc lockbox secret version access latest \
+      --secret-id "${db_user_secret_id}" \
+      --format json | jq -r .entries[0].text_value)
+    echo "export DB_USER='$DB_USER'" >> /etc/profile.d/app_env.sh
+
+    export DB_PASSWORD=$(yc lockbox secret version access latest \
+      --secret-id "${db_password_secret_id}" \
+      --format json | jq -r .entries[0].text_value)
+    echo "export DB_PASSWORD='$DB_PASSWORD'" >> /etc/profile.d/app_env.sh
+
+    export DB_DATABASE=$(yc lockbox secret version access latest \
+      --secret-id "${db_database_secret_id}" \
+      --format json | jq -r .entries[0].text_value)
+    echo "export DB_DATABASE='$DB_DATABASE'" >> /etc/profile.d/app_env.sh
+
+    export DB_TABLE=$(yc lockbox secret version access latest \
+      --secret-id "${db_table_secret_id}" \
+      --format json | jq -r .entries[0].text_value)
+    echo "export DB_TABLE='$DB_TABLE'" >> /etc/profile.d/app_env.sh
+
+    export DB_ROOT_PASSWORD=$(yc lockbox secret version access latest \
+      --secret-id "${db_root_password_secret_id}" \
+      --format json | jq -r .entries[0].text_value)
+    echo "export DB_ROOT_PASSWORD='$DB_ROOT_PASSWORD'" >> /etc/profile.d/app_env.sh
+
     chmod +x /etc/profile.d/app_env.sh
     source /etc/profile.d/app_env.sh
 
-  # 5) Запускаем docker-compose
+  # 5) Docker Compose
   - cd /opt/app/"${repo_path}" \
     && docker compose pull \
     && docker compose up -d
