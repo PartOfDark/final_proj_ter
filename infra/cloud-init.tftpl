@@ -2,7 +2,8 @@
 write_files:
   - path: /etc/cloud/key.json
     owner: root:root
-    permissions: "0644"
+    permissions: "0600"
+    encoding: b64
     content: |
       ${sa_key_b64}
 
