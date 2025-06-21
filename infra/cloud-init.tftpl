@@ -18,16 +18,21 @@ apt:
         url: https://download.docker.com/linux/ubuntu/gpg
 
 packages:
-  - docker-ce
-  - docker-ce-cli
-  - containerd.io
-  - docker-compose-plugin
   - git
   - jq
 
 runcmd:
-  # 1) Docker
-  - systemctl enable docker && systemctl start docker
+runcmd:
+  # 1) Устанавливаем Docker CE (скриптом от Docker Inc.)
+  - curl -fsSL https://get.docker.com | sh
+
+  # 2) Подтягиваем плагин compose
+  - apt-get update
+  - apt-get install -y docker-compose-plugin
+
+  # 3) Включаем и стартуем сервис
+  - systemctl enable docker
+  - systemctl start docker
 
   # 2) yc CLI
   - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash \
