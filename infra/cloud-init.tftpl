@@ -34,10 +34,9 @@ runcmd:
   - systemctl enable docker
   - systemctl start docker
 
-  # 2) yc CLI
-  - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash \
-    && echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh \
-    && chmod +x /etc/profile.d/yc_path.sh
+  - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+  - echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh
+  - chmod +x /etc/profile.d/yc_path.sh
 
   # 3) Клоним репо и настраиваем yc
   - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app \
