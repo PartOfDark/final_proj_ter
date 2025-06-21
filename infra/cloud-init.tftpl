@@ -34,13 +34,11 @@ runcmd:
 
   # 4) Парсим ID секретов и вытягиваем их из Lockbox
   - |
-    IFS=',' read -r -a IDS <<< "${db_secret_ids}"
     mkdir -p /etc/profile.d
     > /etc/profile.d/app_env.sh
     for key in ${keys(db_secret_ids_map)}; do
        id=${db_secret_ids_map[key]}
        name=$key
-       # получаем из lockbox
        value=$(yc lockbox secret version access latest \
          --secret-id "$id" --format json | jq -r .entries[0].text_value)
        echo "export $name='$value'" >> /etc/profile.d/app_env.sh
