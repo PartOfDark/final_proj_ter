@@ -30,10 +30,12 @@ runcmd:
   - systemctl start docker
 
   # ─────────── 02. Устанавливаем yc от имени ubuntu ───────────
-  - su - ubuntu -c "bash -eux -c 'curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | sh'"
-
+  - su - ubuntu -c "bash -ex -c 'curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash'"
+  - test -x /home/ubuntu/yandex-cloud/bin/yc || echo "❌ yc install failed" >&2
   # ─────────── 03. Глобально втыкаем yc в PATH ───────────
-  - cp /home/ubuntu/yandex-cloud/bin/yc /usr/local/bin/yc
+  - cp /home/ubuntu/yandex-cloud/bin/yc /usr/local/bin/yc || true
+  # убедимся, что yc на месте
+  - which yc || echo "❌ yc not in PATH" >&2
 
   # ─────────── 04. Настраиваем yc ───────────
   - /usr/local/bin/yc config set service-account-key /etc/cloud/key.json
@@ -43,7 +45,7 @@ runcmd:
 
   # ─────────── 05. Клонируем ваш репозиторий ───────────
   - mkdir -p /opt/app
-  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app/"${repo_path}"
+  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app/"${repo_path}" || echo "❌ git clone failed" >&2
   - cd /opt/app/"${repo_path}"
 
   # 4) Достаём секреты по одному
