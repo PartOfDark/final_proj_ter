@@ -1,4 +1,5 @@
 #cloud-config
+
 users:
   - name: ubuntu
     groups: sudo
@@ -12,17 +13,41 @@ packages:
   - docker.io
   - docker-compose-plugin
   - git
+  - jq
 
 runcmd:
-  - systemctl enable docker
-  - systemctl start docker
+  # 1) Включаем Docker
+  - systemctl enable docker && systemctl start docker
 
-  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app
-  - cd /opt/app/"${repo_path}"
+  # 2) Устанавливаем yc CLI
+  - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash \
+    && echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh \
+    && chmod +x /etc/profile.d/yc_path.sh
 
+  # 3) Клонируем репо и настраиваем yc
+  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app \
+    && cd /opt/app/"${repo_path}"
   - yc config set service-account-key /etc/cloud/key.json
   - yc config set cloud-id "${cloud_id}"
   - yc config set folder-id "${folder_id}"
   - yc config set compute-default-zone "${zone}"
+
+  # 4) Парсим ID секретов и вытягиваем их из Lockbox
+  - |
+    IFS=',' read -r -a IDS <<< "${db_secret_ids}"
+    mkdir -p /etc/profile.d
+    > /etc/profile.d/app_env.sh
+    for id in "${IDS[@]}"; do
+      NAME=$(yc lockbox secret get "$id" --format json | jq -r .name)
+      VALUE=$(yc lockbox secret version access latest --secret-id "$id" --format json | jq -r .entries[0].text_value)
+      echo "export ${NAME}='${VALUE}'" >> /etc/profile.d/app_env.sh
+    done
+    chmod +x /etc/profile.d/app_env.sh
+    source /etc/profile.d/app_env.sh
+
+  # 5) Запускаем docker-compose
+  - cd /opt/app/"${repo_path}" \
+    && docker compose pull \
+    && docker compose up -d
 
 final_message: "App is up and running!"
