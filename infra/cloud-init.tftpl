@@ -22,76 +22,46 @@ packages:
   - jq
 
 runcmd:
-runcmd:
-  # 1) Устанавливаем Docker CE (скриптом от Docker Inc.)
+  # ─────────── 01. Docker CE & compose-plugin ───────────
   - curl -fsSL https://get.docker.com | sh
-
-  # 2) Подтягиваем плагин compose
   - apt-get update
   - apt-get install -y docker-compose-plugin
-
-  # 3) Включаем и стартуем сервис
   - systemctl enable docker
   - systemctl start docker
 
-  - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-  - echo 'export PATH=/home/ubuntu/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh
-  - chmod +x /etc/profile.d/yc_path.sh
+  # ─────────── 02. Устанавливаем yc от имени ubuntu ───────────
+  - su - ubuntu -c "bash -eux -c 'curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | sh'"
 
-  - /home/ubuntu/yandex-cloud/bin/yc config set service-account-key /etc/cloud/key.json
-  - /home/ubuntu/yandex-cloud/bin/yc config set cloud-id "${cloud_id}"
-  - /home/ubuntu/yandex-cloud/bin/yc config set folder-id "${folder_id}"
-  - /home/ubuntu/yandex-cloud/bin/yc config set compute-default-zone "${zone}"
+  # ─────────── 03. Глобально втыкаем yc в PATH ───────────
+  - cp /home/ubuntu/yandex-cloud/bin/yc /usr/local/bin/yc
 
-  # 3) Клоним репо и настраиваем yc
-  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app
+  # ─────────── 04. Настраиваем yc ───────────
+  - /usr/local/bin/yc config set service-account-key /etc/cloud/key.json
+  - /usr/local/bin/yc config set cloud-id      "${cloud_id}"
+  - /usr/local/bin/yc config set folder-id     "${folder_id}"
+  - /usr/local/bin/yc config set compute-default-zone "${zone}"
+
+  # ─────────── 05. Клонируем ваш репозиторий ───────────
+  - mkdir -p /opt/app
+  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app/"${repo_path}"
   - cd /opt/app/"${repo_path}"
-  - yc config set service-account-key /etc/cloud/key.json
-  - yc config set cloud-id "${cloud_id}"
-  - yc config set folder-id "${folder_id}"
-  - yc config set compute-default-zone "${zone}"
 
-  # 4) Достаём секреты по одному
+  # ─────────── 06. Достаём секреты ───────────
   - |
     mkdir -p /etc/profile.d
-    > /etc/profile.d/app_env.sh
-
-    export DB_HOST=$(yc lockbox secret version access latest \
-      --secret-id "${db_host_secret_id}" \
-      --format json | jq -r .entries[0].text_value)
-    echo "export DB_HOST='$DB_HOST'" >> /etc/profile.d/app_env.sh
-
-    export DB_USER=$(yc lockbox secret version access latest \
-      --secret-id "${db_user_secret_id}" \
-      --format json | jq -r .entries[0].text_value)
-    echo "export DB_USER='$DB_USER'" >> /etc/profile.d/app_env.sh
-
-    export DB_PASSWORD=$(yc lockbox secret version access latest \
-      --secret-id "${db_password_secret_id}" \
-      --format json | jq -r .entries[0].text_value)
-    echo "export DB_PASSWORD='$DB_PASSWORD'" >> /etc/profile.d/app_env.sh
-
-    export DB_DATABASE=$(yc lockbox secret version access latest \
-      --secret-id "${db_database_secret_id}" \
-      --format json | jq -r .entries[0].text_value)
-    echo "export DB_DATABASE='$DB_DATABASE'" >> /etc/profile.d/app_env.sh
-
-    export DB_TABLE=$(yc lockbox secret version access latest \
-      --secret-id "${db_table_secret_id}" \
-      --format json | jq -r .entries[0].text_value)
-    echo "export DB_TABLE='$DB_TABLE'" >> /etc/profile.d/app_env.sh
-
-    export DB_ROOT_PASSWORD=$(yc lockbox secret version access latest \
-      --secret-id "${db_root_password_secret_id}" \
-      --format json | jq -r .entries[0].text_value)
-    echo "export DB_ROOT_PASSWORD='$DB_ROOT_PASSWORD'" >> /etc/profile.d/app_env.sh
-
+    echo "#!/usr/bin/env bash" > /etc/profile.d/app_env.sh
+    for s in db_host db_user db_password db_database db_table db_root_password; do
+      secret_id="${!s}_secret_id"
+      val=$( yc lockbox secret version access latest \
+        --secret-id "${!secret_id}" \
+        --format json | jq -r .entries[0].text_value )
+      echo "export ${s^^}='$val'" >> /etc/profile.d/app_env.sh
+    done
     chmod +x /etc/profile.d/app_env.sh
-    source /etc/profile.d/app_env.sh
 
-  # 5) Docker Compose
-  - cd /opt/app/"${repo_path}" \
-    && docker compose pull \
-    && docker compose up -d
+  # ─────────── 07. Поднимаем docker-compose ───────────
+  - cd /opt/app/"${repo_path}"
+  - docker compose pull
+  - docker compose up -d
 
-final_message: "App is up and running!"
+final_message: "✅ App is up and running!"
