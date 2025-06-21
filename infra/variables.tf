@@ -152,16 +152,16 @@ variable "repo_path" {
 }
 
 variable "db_secret_ids" {
-  description = "Lockbox IDs для: host, user, password, database, table, root_password"
-  type        = list(string)
-  default = [
-    "e6qhm6fsibgkkgssrrn1", # DB_HOST
-    "e6qer673j31g3jf27vca", # DB_USER
-    "e6qd7st67mr2fib931a5", # DB_PASSWORD
-    "e6qbdnboe8sv9o230vmi", # DB_DATABASE
-    "e6qcukmn90jp6ipqasfd", # DB_TABLE
-    "e6qk5ck8bm5209kdq931", # DB_ROOT_PASSWORD
-  ]
+  description = "LockBox IDs для каждого секрета (ключи должны совпадать с тем, как вы их используете в cloud-init)"
+  type        = map(string)
+  default = {
+    DB_HOST          = "e6qhm6fsibgkkgssrrn1"
+    DB_USER          = "e6qer673j31g3jf27vca"
+    DB_PASSWORD      = "e6qd7st67mr2fib931a5"
+    DB_DATABASE      = "e6qbdnboe8sv9o230vmi"
+    DB_TABLE         = "e6qcukmn90jp6ipqasfd"
+    DB_ROOT_PASSWORD = "e6qk5ck8bm5209kdq931"
+  }
 }
 
 # variable "registry_id" {
