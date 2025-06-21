@@ -55,7 +55,7 @@ resource "yandex_compute_instance" "web" {
   }
   metadata = {
     ssh-keys = "ubuntu:${var.ssh_pub_key}"
-    user-data = templatefile("${path.module}/cloud-init.tpl", {
+    user-data = templatefile("${path.module}/cloud-init.tftpl", {
       ssh_key           = var.ssh_pub_key
       repo_url          = var.repo_url
       repo_branch       = var.repo_branch
