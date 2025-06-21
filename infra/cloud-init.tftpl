@@ -35,12 +35,17 @@ runcmd:
   - systemctl start docker
 
   - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-  - echo 'export PATH=$HOME/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh
+  - echo 'export PATH=/home/ubuntu/yandex-cloud/bin:$PATH' > /etc/profile.d/yc_path.sh
   - chmod +x /etc/profile.d/yc_path.sh
 
+  - /home/ubuntu/yandex-cloud/bin/yc config set service-account-key /etc/cloud/key.json
+  - /home/ubuntu/yandex-cloud/bin/yc config set cloud-id "${cloud_id}"
+  - /home/ubuntu/yandex-cloud/bin/yc config set folder-id "${folder_id}"
+  - /home/ubuntu/yandex-cloud/bin/yc config set compute-default-zone "${zone}"
+
   # 3) Клоним репо и настраиваем yc
-  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app \
-    && cd /opt/app/"${repo_path}"
+  - git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app
+  - cd /opt/app/"${repo_path}"
   - yc config set service-account-key /etc/cloud/key.json
   - yc config set cloud-id "${cloud_id}"
   - yc config set folder-id "${folder_id}"
