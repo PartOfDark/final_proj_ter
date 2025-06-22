@@ -98,18 +98,17 @@ resource "yandex_mdb_mysql_cluster" "db" {
     subnet_id = yandex_vpc_subnet.subnet_develop.id
     name      = "${var.mdb_props.name}-host-1"
   }
-}
-
-resource "time_sleep" "wait_for_mdb" {
-  depends_on      = [yandex_mdb_mysql_cluster.db]
-  create_duration = "300s"
+  timeouts {
+    create = "10m"
+    update = "10m"
+    delete = "10m"
+  }
 }
 
 resource "yandex_mdb_mysql_user" "db_user" {
   cluster_id = yandex_mdb_mysql_cluster.db.id
   name       = var.mdb_props.user.name
   password   = var.mdb_props.user.password
-  depends_on = [time_sleep.wait_for_mdb]
 }
 
 resource "yandex_container_registry" "develop_registry" {
