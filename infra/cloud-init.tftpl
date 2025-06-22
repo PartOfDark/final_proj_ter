@@ -1,7 +1,7 @@
 #cloud-config
 write_files:
   - path: /etc/cloud/key.json
-    owner: root:root
+    owner: ubuntu:ubuntu
     permissions: "0600"
     encoding: b64
     content: |
@@ -45,10 +45,11 @@ runcmd:
   - which yc || echo "❌ yc not in PATH" >&2
 
   # ─────────── 04. Настраиваем yc ───────────
-  - su - ubuntu -c "yc config set service-account-key /etc/cloud/key.json && \
-    yc config set cloud-id ${cloud_id} && \
-    yc config set folder-id ${folder_id} && \
-    yc config set compute-default-zone ${zone}"
+  - su - ubuntu -c "/home/ubuntu/yandex-cloud/bin/yc config set service-account-key-file /home/ubuntu/.config/yandex-cloud/key.json"
+  - su - ubuntu -c "/home/ubuntu/yandex-cloud/bin/yc config set instance-service-account true"
+  - su - ubuntu -c "/home/ubuntu/yandex-cloud/bin/yc config set cloud-id '${cloud_id}'"
+  - su - ubuntu -c "/home/ubuntu/yandex-cloud/bin/yc config set folder-id '${folder_id}'"
+  - su - ubuntu -c "/home/ubuntu/yandex-cloud/bin/yc config set compute-default-zone '${zone}'"
 
   # ─────────── 05. Клонируем  репозиторий ───────────
   - mkdir -p /opt/app
