@@ -103,7 +103,7 @@ resource "yandex_mdb_mysql_cluster" "db" {
     name     = var.mdb_props.user.name
     password = var.mdb_props.user.password
 
-    permissions {
+    permission {
       database_name = yandex_mdb_mysql_cluster.db.name
       roles         = ["ALL"]
     }
