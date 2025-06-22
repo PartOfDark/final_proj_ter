@@ -1,11 +1,60 @@
 #cloud-config
+
 write_files:
+  # 1) Сохраняем service account key
   - path: /home/ubuntu/.config/yandex-cloud/key.json
     owner: ubuntu:ubuntu
     permissions: "0600"
     encoding: b64
     content: |
       ${sa_key_b64}
+
+  # 2) Скрипт для вытаскивания Lockbox-секретов
+  - path: /usr/local/bin/fetch-lockbox-secrets.sh
+    owner: ubuntu:ubuntu
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -e
+
+      # добавляем yc из домашней папки ubuntu
+      export PATH=/home/ubuntu/yandex-cloud/bin:$PATH
+
+      # получаем и экранируем секреты
+      DB_HOST=$(
+        yc lockbox payload get "${db_host_secret_id}" --format json \
+        | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value'
+      )
+      DB_USER=$(
+        yc lockbox payload get "${db_user_secret_id}" --format json \
+        | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value'
+      )
+      DB_PASSWORD=$(
+        yc lockbox payload get "${db_password_secret_id}" --format json \
+        | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value'
+      )
+      DB_DATABASE=$(
+        yc lockbox payload get "${db_database_secret_id}" --format json \
+        | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value'
+      )
+      DB_TABLE=$(
+        yc lockbox payload get "${db_table_secret_id}" --format json \
+        | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value'
+      )
+      DB_ROOT_PASSWORD=$(
+        yc lockbox payload get "${db_root_password_secret_id}" --format json \
+        | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value'
+      )
+
+      # записываем в окружение
+      cat <<'EOF' > /etc/profile.d/app_env.sh
+      export DB_HOST='${DB_HOST}'
+      export DB_USER='${DB_USER}'
+      export DB_PASSWORD='${DB_PASSWORD}'
+      export DB_DATABASE='${DB_DATABASE}'
+      export DB_TABLE='${DB_TABLE}'
+      export DB_ROOT_PASSWORD='${DB_ROOT_PASSWORD}'
+      EOF
 
 users:
   - name: ubuntu
@@ -44,36 +93,18 @@ runcmd:
   # убедимся, что yc на месте
   - which yc || echo "❌ yc not in PATH" >&2
 
-  # ─────────── 04. Настраиваем yc ───────────
+  # ─── 04. Настраиваем yc (для ubuntu) ───
   - su - ubuntu -c "yc config set service-account-key /home/ubuntu/.config/yandex-cloud/key.json"
   - su - ubuntu -c "yc config set cloud-id ${cloud_id}"
   - su - ubuntu -c "yc config set folder-id ${folder_id}"
   - su - ubuntu -c "yc config set compute-default-zone ${zone}"
 
-  # ─────────── 05. Клонируем  репозиторий ───────────
-  - mkdir -p /opt/app
-  - chown ubuntu:ubuntu /opt/app
-  - su - ubuntu -c "git clone --depth 1 --branch \"${repo_branch}\" \"${repo_url}\" /opt/app || echo '❌ git clone failed' >&2"
+  # ─── 05. Вытягиваем секреты ───
+  - chmod +x /usr/local/bin/fetch-lockbox-secrets.sh
+  - su - ubuntu -c "/usr/local/bin/fetch-lockbox-secrets.sh"
+  - . /etc/profile.d/app_env.sh
 
-  - mkdir -p /etc/profile.d
-  - |
-    cat <<'EOF' > /etc/profile.d/app_env.sh
-    #!/usr/bin/env bash
-    export DB_HOST="$(yc lockbox payload get ${db_host_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
-    export DB_USER="$(yc lockbox payload get ${db_user_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
-    export DB_PASSWORD="$(yc lockbox payload get ${db_password_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
-    export DB_DATABASE="$(yc lockbox payload get ${db_database_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
-    export DB_TABLE="$(yc lockbox payload get ${db_table_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
-    export DB_ROOT_PASSWORD="$(yc lockbox payload get ${db_root_password_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
-    EOF
-  - chmod +x /etc/profile.d/app_env.sh
-  # 5) Запускаем docker-compose
-  - 'su - ubuntu -c "cd /opt/app && docker compose up -d"'
+  # ─── 06. Запускаем приложение ───
+  - cd /opt/app/"${repo_path}" && docker compose pull && docker compose up -d
 
 final_message: "App is up and running!"
