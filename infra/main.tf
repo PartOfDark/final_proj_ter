@@ -103,6 +103,7 @@ resource "yandex_mdb_mysql_user" "db_user" {
   cluster_id = yandex_mdb_mysql_cluster.db.id
   name       = var.mdb_props.user.name
   password   = var.mdb_props.user.password
+  depends_on = [yandex_mdb_mysql_cluster.db]
 }
 
 resource "yandex_container_registry" "develop_registry" {
