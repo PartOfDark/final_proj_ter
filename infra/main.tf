@@ -118,3 +118,7 @@ resource "yandex_container_registry" "develop_registry" {
     my-label = "develop"
   }
 }
+
+output "cluster_id" {
+  value = yandex_mdb_mysql_cluster.db.id
+}
