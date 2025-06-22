@@ -38,6 +38,19 @@ jobs:
     - name: Terraform Init
       run: terraform -chdir=infra init -input=false
 
+    - name: Terraform Apply MDB Cluster
+      run: |
+        terraform -chdir=infra apply \
+          -auto-approve \
+          -input=false \
+          -lock=false \
+          -target=yandex_mdb_mysql_cluster.db \
+          -var="ssh_pub_key=${{ secrets.SSH_PUB_KEY }}" \
+          -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
+          -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
+          -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
+          -var="zone=${{ secrets.YC_ZONE }}"
+
     - name: Terraform Plan
       run: |
         terraform -chdir=infra plan  \
