@@ -50,10 +50,11 @@ runcmd:
   - su - ubuntu -c "yc config set folder-id '${folder_id}'"
   - su - ubuntu -c "yc config set compute-default-zone '${zone}'"
 
-  # ─────────── 05. Клонируем ваш репозиторий ───────────
+  # ─────────── 05. Клонируем  репозиторий ───────────
   - mkdir -p /opt/app
-  - su - ubuntu -c git clone --depth 1 --branch "${repo_branch}" "${repo_url}" /opt/app/"${repo_path}" || echo "❌ git clone failed" >&2
-  - su - ubuntu cd /opt/app/"${repo_path}"
+  - su - ubuntu -c "git clone --depth 1 --branch \"${repo_branch}\" \"${repo_url}\" /opt/app/${repo_path} || echo '❌ git clone failed' >&2"
+
+  - su - ubuntu -c cd /opt/app/"${repo_path}"
 
   - mkdir -p /etc/profile.d
   - "> /etc/profile.d/app_env.sh"
