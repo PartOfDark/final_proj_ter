@@ -55,44 +55,25 @@ runcmd:
   - chown ubuntu:ubuntu /opt/app
   - su - ubuntu -c "git clone --depth 1 --branch \"${repo_branch}\" \"${repo_url}\" /opt/app || echo '❌ git clone failed' >&2"
 
-  - su - ubuntu -c "cd /opt/app"
-
   - mkdir -p /etc/profile.d
-  - "> /etc/profile.d/app_env.sh"
-
   - |
-    echo "export DB_HOST=$(yc lockbox payload get ${db_host_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
-      | tee -a /etc/profile.d/app_env.sh
-
-  - |
-    echo "export DB_USER=$(yc lockbox payload get ${db_user_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
-      | tee -a /etc/profile.d/app_env.sh
-
-  - |
-    echo "export DB_PASSWORD=$(yc lockbox payload get ${db_password_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
-      | tee -a /etc/profile.d/app_env.sh
-
-  - |
-    echo "export DB_DATABASE=$(yc lockbox payload get ${db_database_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
-      | tee -a /etc/profile.d/app_env.sh
-
-  - |
-    echo "export DB_TABLE=$(yc lockbox payload get ${db_table_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
-      | tee -a /etc/profile.d/app_env.sh
-
-  - |
-    echo "export DB_ROOT_PASSWORD=$(yc lockbox payload get ${db_root_password_secret_id} --format json \
-      | jq -r '.entries[] | select(.key=="text_value")? .text_value // .entries[0].text_value')" \
-      | tee -a /etc/profile.d/app_env.sh
-
+    cat <<'EOF' > /etc/profile.d/app_env.sh
+    #!/usr/bin/env bash
+    export DB_HOST="$(yc lockbox payload get ${db_host_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
+    export DB_USER="$(yc lockbox payload get ${db_user_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
+    export DB_PASSWORD="$(yc lockbox payload get ${db_password_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
+    export DB_DATABASE="$(yc lockbox payload get ${db_database_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
+    export DB_TABLE="$(yc lockbox payload get ${db_table_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
+    export DB_ROOT_PASSWORD="$(yc lockbox payload get ${db_root_password_secret_id} --format json \
+      | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
+    EOF
   - chmod +x /etc/profile.d/app_env.sh
-
   # 5) Запускаем docker-compose
-  - 'su - ubuntu -c "cd /opt/app && docker compose pull && docker compose up -d"'
+  - 'su - ubuntu -c "cd /opt/app && docker compose up -d"'
 
 final_message: "App is up and running!"
