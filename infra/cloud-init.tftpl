@@ -45,17 +45,17 @@ runcmd:
   - which yc || echo "❌ yc not in PATH" >&2
 
   # ─────────── 04. Настраиваем yc ───────────
-  - su - ubuntu -c "yc config set service-account-key /etc/cloud/key.json"
-  - su - ubuntu -c "yc config set cloud-id '${cloud_id}'"
-  - su - ubuntu -c "yc config set folder-id '${folder_id}'"
-  - su - ubuntu -c "yc config set compute-default-zone '${zone}'"
+  - su - ubuntu -c "yc config set service-account-key /etc/cloud/key.json && \
+    yc config set cloud-id ${cloud_id} && \
+    yc config set folder-id ${folder_id} && \
+    yc config set compute-default-zone ${zone}"
 
   # ─────────── 05. Клонируем  репозиторий ───────────
   - mkdir -p /opt/app
   - chown ubuntu:ubuntu /opt/app
-  - su - ubuntu -c "git clone --depth 1 --branch \"${repo_branch}\" \"${repo_url}\" /opt/app/${repo_path} || echo '❌ git clone failed' >&2"
+  - su - ubuntu -c "git clone --depth 1 --branch \"${repo_branch}\" \"${repo_url}\" /opt/app || echo '❌ git clone failed' >&2"
 
-  - su - ubuntu -c "cd /opt/app/${repo_path}"
+  - su - ubuntu -c "cd /opt/app"
 
   - mkdir -p /etc/profile.d
   - "> /etc/profile.d/app_env.sh"
@@ -93,6 +93,6 @@ runcmd:
   - chmod +x /etc/profile.d/app_env.sh
 
   # 5) Запускаем docker-compose
-  - 'su - ubuntu -c "cd /opt/app/${repo_path} && docker compose pull && docker compose up -d"'
+  - 'su - ubuntu -c "cd /opt/app && docker compose pull && docker compose up -d"'
 
 final_message: "App is up and running!"
