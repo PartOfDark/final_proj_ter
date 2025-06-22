@@ -9,13 +9,17 @@ jobs:
   tf:
     runs-on: ubuntu-latest
 
-    # подхватываем AWS-креды для S3-бэкенда и YC-креды для CLI
     env:
-      TF_IN_AUTOMATION:      true
+      # для Terraform
+      TF_IN_AUTOMATION: true
+
+      # AWS-переменные (S3-backend)
       AWS_ACCESS_KEY_ID:     ${{ secrets.S3_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
-      AWS_DEFAULT_REGION:    ru-central1
+      AWS_REGION:            ru-central1
+      AWS_PROFILE:           default
 
+      # Yandex-переменные, нужны позже для yc-cli
       YC_SA_KEY_BS64: ${{ secrets.YC_SA_KEY_BS64 }}
       YC_CLOUD_ID:    ${{ secrets.YC_CLOUD_ID }}
       YC_FOLDER_ID:   ${{ secrets.YC_FOLDER_ID }}
@@ -25,9 +29,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # ───────────── Настраиваем AWS-S3 бэкенд ─────────────
+      - name: Configure AWS credentials for S3 backend
+        run: |
+          mkdir -p ~/.aws
+          cat > ~/.aws/credentials <<EOF
+          [default]
+          aws_access_key_id = $AWS_ACCESS_KEY_ID
+          aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
+          EOF
+
+          cat > ~/.aws/config <<EOF
+          [default]
+          region = $AWS_REGION
+          output = json
+          EOF
+
+      # ───────────── SSH ключ для VM ─────────────
       - name: Set SSH public key
         run: echo "${{ secrets.SSH_PUB_KEY }}" > infra/ssh_pub.key
 
+      # ───────────── Terraform + первый apply ─────────────
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -36,7 +58,6 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=infra init -input=false
 
-      # ─────────── ШАГ 1: создаём только MDB-кластер ───────────
       - name: Terraform Apply MDB Cluster
         run: |
           terraform -chdir=infra apply \
@@ -50,7 +71,7 @@ jobs:
             -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
             -var="zone=${{ secrets.YC_ZONE }}"
 
-      # ─────────── ШАГ 2: ждём, пока кластер перейдёт в RUNNING ───────────
+      # ───────────── Ждём кластер ─────────────
       - name: Install Yandex Cloud CLI & jq
         run: |
           curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
@@ -68,15 +89,13 @@ jobs:
       - name: Wait for MDB Cluster READY
         run: |
           CLUSTER_ID=$(terraform -chdir=infra output -raw cluster_id)
-          echo "⏱  Waiting for cluster $CLUSTER_ID to become RUNNING…"
           until [[ "$(yc mdb mysql cluster get --cluster-id $CLUSTER_ID --format json \
                     | jq -r '.cluster.status')" == "RUNNING" ]]; do
-            echo "  still not RUNNING — sleeping 20s"
+            echo " waiting…"
             sleep 20
           done
-          echo "✅ Cluster is RUNNING"
 
-      # ─────────── ШАГ 3: создаём БД, пользователя и всё остальное ───────────
+      # ───────────── Второй apply ─────────────
       - name: Terraform Apply Remaining Resources
         run: |
           terraform -chdir=infra apply \
