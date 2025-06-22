@@ -8,105 +8,56 @@ on:
 jobs:
   tf:
     runs-on: ubuntu-latest
-
     env:
-      # для Terraform
-      TF_IN_AUTOMATION: true
-
-      # AWS-переменные (S3-backend)
-      AWS_ACCESS_KEY_ID:     ${{ secrets.S3_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
-      AWS_REGION:            ru-central1
-      AWS_PROFILE:           default
-
-      # Yandex-переменные, нужны позже для yc-cli
-      YC_SA_KEY_BS64: ${{ secrets.YC_SA_KEY_BS64 }}
-      YC_CLOUD_ID:    ${{ secrets.YC_CLOUD_ID }}
-      YC_FOLDER_ID:   ${{ secrets.YC_FOLDER_ID }}
-      YC_ZONE:        ${{ secrets.YC_ZONE }}
-
+      TF_IN_AUTOMATION: true     
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      # ───────────── Настраиваем AWS-S3 бэкенд ─────────────
-      - name: Configure AWS credentials for S3 backend
-        run: |
-          mkdir -p ~/.aws
-          cat > ~/.aws/credentials <<EOF
-          [default]
-          aws_access_key_id = $AWS_ACCESS_KEY_ID
-          aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
-          EOF
+    - name: Configure S3-backend credentials
+      run: |
+        mkdir -p ~/.aws
+        cat <<EOF > ~/.aws/credentials.ini
+        [default]
+        aws_access_key_id = ${{ secrets.S3_ACCESS_KEY }}
+        aws_secret_access_key = ${{ secrets.S3_SECRET_KEY }}
+        EOF
+        cat <<EOF > ~/.aws/config
+        [default]
+        region = ru-central1
+        EOF
 
-          cat > ~/.aws/config <<EOF
-          [default]
-          region = $AWS_REGION
-          output = json
-          EOF
+    - name: Set SSH public key
+      run: echo "${{ secrets.SSH_PUB_KEY }}" > infra/ssh_pub.key
 
-      # ───────────── SSH ключ для VM ─────────────
-      - name: Set SSH public key
-        run: echo "${{ secrets.SSH_PUB_KEY }}" > infra/ssh_pub.key
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: "1.8.4"
 
-      # ───────────── Terraform + первый apply ─────────────
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: "1.8.4"
+    - name: Terraform Init
+      run: terraform -chdir=infra init -input=false
 
-      - name: Terraform Init
-        run: terraform -chdir=infra init -input=false
-
-      - name: Terraform Apply MDB Cluster
-        run: |
-          terraform -chdir=infra apply \
-            -auto-approve \
-            -input=false \
-            -lock=false \
-            -target=yandex_mdb_mysql_cluster.db \
-            -var="ssh_pub_key=${{ secrets.SSH_PUB_KEY }}" \
-            -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
-            -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
-            -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
-            -var="zone=${{ secrets.YC_ZONE }}"
-
-      # ───────────── Ждём кластер ─────────────
-      - name: Install Yandex Cloud CLI & jq
-        run: |
-          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Configure Yandex CLI
-        run: |
-          printf '%s' "$YC_SA_KEY_BS64" | base64 -d > key.json
-          yc config set service-account-key key.json
-          yc config set cloud-id $YC_CLOUD_ID
-          yc config set folder-id $YC_FOLDER_ID
-          yc config set compute-default-zone $YC_ZONE
-
-      - name: Wait for MDB Cluster READY
-        run: |
-          CLUSTER_ID=$(terraform -chdir=infra output -raw cluster_id)
-          until [[ "$(yc mdb mysql cluster get --cluster-id $CLUSTER_ID --format json \
-                    | jq -r '.cluster.status')" == "RUNNING" ]]; do
-            echo " waiting…"
-            sleep 20
-          done
-
-      # ───────────── Второй apply ─────────────
-      - name: Terraform Apply Remaining Resources
-        run: |
-          terraform -chdir=infra apply \
-            -auto-approve \
-            -input=false \
-            -lock=false \
-            -var="ssh_pub_key=${{ secrets.SSH_PUB_KEY }}" \
-            -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
-            -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
-            -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
-            -var="zone=${{ secrets.YC_ZONE }}"
+    - name: Terraform Plan
+      run: |
+        terraform -chdir=infra plan  \
+             -lock=false \
+             -var="ssh_path=ssh_pub.key" \
+             -var="ssh_pub_key=${{ secrets.SSH_PUB_KEY }}" \
+             -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
+             -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
+             -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
+             -var="zone=${{ secrets.YC_ZONE }}"
+    - name: Terraform Apply
+      run: |
+        terraform -chdir=infra apply -auto-approve -input=false \
+             -lock=false \
+             -var="ssh_path=ssh_pub.key" \
+             -var="ssh_pub_key=${{ secrets.SSH_PUB_KEY }}" \
+             -var="sa_key_b64=${{ secrets.YC_SA_KEY_BS64 }}" \
+             -var="cloud_id=${{ secrets.YC_CLOUD_ID }}" \
+             -var="folder_id=${{ secrets.YC_FOLDER_ID }}" \
+             -var="zone=${{ secrets.YC_ZONE }}"
 
   build-and-push:
     needs: tf
