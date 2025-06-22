@@ -105,7 +105,7 @@ resource "yandex_mdb_mysql_cluster" "db" {
 
     permissions {
       database_name = yandex_mdb_mysql_cluster.db.name
-      roles         = ["readWrite"]
+      roles         = ["ALL"]
     }
   }
 }
