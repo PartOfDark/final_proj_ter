@@ -99,11 +99,17 @@ resource "yandex_mdb_mysql_cluster" "db" {
     name      = "${var.mdb_props.name}-host-1"
   }
 }
+
+resource "time_sleep" "wait_for_mdb" {
+  depends_on      = [yandex_mdb_mysql_cluster.db]
+  create_duration = "300s"
+}
+
 resource "yandex_mdb_mysql_user" "db_user" {
   cluster_id = yandex_mdb_mysql_cluster.db.id
   name       = var.mdb_props.user.name
   password   = var.mdb_props.user.password
-  depends_on = [yandex_mdb_mysql_cluster.db]
+  depends_on = [time_sleep.wait_for_mdb]
 }
 
 resource "yandex_container_registry" "develop_registry" {
