@@ -7,13 +7,13 @@ output "web_sg_name" {
 }
 
 output "db_address" {
-  value = yandex_mdb_mysql_cluster.db.host[0].fqdn
+  value = yandex_mdb_mysql_cluster.db.host
 }
 
 output "db_port" {
-  value = yandex_mdb_mysql_cluster.db.port
+  value = 3306
 }
 
 output "registry_url" {
-  value = yandex_container_registry.develop_registry.repository_id
+  value = "cr.yandex/${yandex_container_registry.develop_registry.id}"
 }
