@@ -76,22 +76,22 @@ packages:
   - jq
 
 runcmd:
-  # ─────────── 01. Docker CE & compose-plugin ───────────
+  # ─────────── 3. Docker CE & compose-plugin ───────────
   - curl -fsSL https://get.docker.com | sh
   - apt-get update
   - apt-get install -y docker-compose-plugin
   - systemctl enable docker
   - systemctl start docker
 
-  # ─────────── 02. Устанавливаем yc от имени ubuntu ───────────
+  # ─────────── 4. Устанавливаем yc от имени ubuntu ───────────
   - su - ubuntu -c "bash -ex -c 'curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash'"
   - test -x /home/ubuntu/yandex-cloud/bin/yc || echo "❌ yc install failed" >&2
-  # ─────────── 03. Глобально втыкаем yc в PATH ───────────
+  # ─────────── 5. Глобально втыкаем yc в PATH ───────────
   - cp /home/ubuntu/yandex-cloud/bin/yc /usr/local/bin/yc || true
   # убедимся, что yc на месте
   - which yc || echo "❌ yc not in PATH" >&2
 
-  # ─── 04. Настраиваем yc (для ubuntu) ───
+  # ─── 6. Настраиваем yc (для ubuntu) ───
   - su - ubuntu -c "yc config set service-account-key /home/ubuntu/.config/yandex-cloud/key.json"
   - su - ubuntu -c "yc config set cloud-id ${cloud_id}"
   - su - ubuntu -c "yc config set folder-id ${folder_id}"
