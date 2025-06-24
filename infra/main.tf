@@ -118,7 +118,7 @@ resource "yandex_container_registry" "develop_registry" {
     my-label = "develop"
   }
 }
-
+#создаю registry но не использую 
 output "cluster_id" {
   value = yandex_mdb_mysql_cluster.db.id
 }
