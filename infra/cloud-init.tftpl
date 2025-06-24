@@ -73,7 +73,7 @@ runcmd:
       | jq -r '.entries[] | select(.key=="text_value")?.text_value // .entries[0].text_value')"
     EOF
   - chmod +x /etc/profile.d/app_env.sh
-  # 5) Запускаем docker-compose
+  #───────────  06. Запускаем docker-compose
   - 'su - ubuntu -c "cd /opt/app && docker compose up -d"'
 
-final_message: "App is up and running!"
+final_message: "cloud-init finished at $(date +%Y-%m-%dT%H:%M:%S%z)."
